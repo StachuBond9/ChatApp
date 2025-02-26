@@ -23,10 +23,13 @@ public class UserController {
     @PostMapping(value = "/registration")
     public ResponseEntity<User> userRegistration(@RequestBody UserRequest userRequest) {
         User user= userService.createUser(userRequest.login(), userRequest.password());
-        if(user == null){
-            return ResponseEntity.status((HttpStatus.BAD_REQUEST)).body(null);
-        }
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
+    }
+
+    @PostMapping(value = "/login")
+    public ResponseEntity<String> userLogin(@RequestBody UserRequest userRequest){
+        String token = userService.loginUser(userRequest.login(), userRequest.password());
+        return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 
 }
