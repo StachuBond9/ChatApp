@@ -5,10 +5,7 @@ import com.staislawwojcik.forum.domain.UserService;
 import com.staislawwojcik.forum.infrastructure.database.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -22,14 +19,20 @@ public class UserController {
 
     @PostMapping(value = "/registration")
     public ResponseEntity<User> userRegistration(@RequestBody UserRequest userRequest) {
-        User user= userService.createUser(userRequest.login(), userRequest.password());
+        User user = userService.createUser(userRequest.login(), userRequest.password());
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
     @PostMapping(value = "/login")
-    public ResponseEntity<String> userLogin(@RequestBody UserRequest userRequest){
+    public ResponseEntity<String> userLogin(@RequestBody UserRequest userRequest) {
         String token = userService.loginUser(userRequest.login(), userRequest.password());
         return ResponseEntity.status(HttpStatus.OK).body(token);
+    }
+
+    @GetMapping(value = "/logout")
+    public ResponseEntity<Boolean> logoutUser(@RequestHeader("token") String token) {
+        boolean logoutCorrectly = userService.logoutUser(token);
+        return ResponseEntity.status(HttpStatus.OK).body(logoutCorrectly);
     }
 
 }

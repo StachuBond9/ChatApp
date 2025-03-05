@@ -5,11 +5,13 @@ import com.staislawwojcik.forum.infrastructure.database.UserRepository;
 import com.staislawwojcik.forum.infrastructure.database.UserSession;
 import com.staislawwojcik.forum.infrastructure.database.UserSessionRepository;
 import jdk.jshell.Snippet;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -46,7 +48,7 @@ public class UserService {
 
 
     private boolean loginValidation(String login) {
-        if(users.existsById(login)){
+        if (users.existsById(login)) {
             return false;
         }
         if (users.findAll().contains(new User(login, null))) {
@@ -71,5 +73,25 @@ public class UserService {
 
     public static boolean isAlphanumericWithUnderscore(String str) {
         return ALPHANUMERIC_UNDERSCORE_PATTERN.matcher(str).matches();
+    }
+
+    public boolean logoutUser(String token) {
+        usersSessions.deleteById(token);
+        return !usersSessions.existsById(token);
+    }
+
+    public User getById(String id) {
+        return users.findById(id)
+                .orElseThrow(() -> new DomainException("No user with that id : " + id, 400));
+    }
+
+    public User getByToken(String token){
+        return usersSessions.findById(token)
+                .orElseThrow(() -> new DomainException("Invalid token : " + token , 400))
+                .getLoggedUser();
+    }
+
+    public List<User> usersList(){
+       return users.findAll(Sort.unsorted());
     }
 }
