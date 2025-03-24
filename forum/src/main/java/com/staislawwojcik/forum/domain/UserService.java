@@ -1,19 +1,14 @@
 package com.staislawwojcik.forum.domain;
 
-import com.staislawwojcik.forum.infrastructure.database.User;
-import com.staislawwojcik.forum.infrastructure.database.UserRepository;
-import com.staislawwojcik.forum.infrastructure.database.UserSession;
-import com.staislawwojcik.forum.infrastructure.database.UserSessionRepository;
-import jdk.jshell.Snippet;
+import com.staislawwojcik.forum.infrastructure.database.user.User;
+import com.staislawwojcik.forum.infrastructure.database.user.UserRepository;
+import com.staislawwojcik.forum.infrastructure.database.user.UserSession;
+import com.staislawwojcik.forum.infrastructure.database.user.UserSessionRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
@@ -93,5 +88,9 @@ public class UserService {
 
     public List<User> usersList(){
        return users.findAll(Sort.unsorted());
+    }
+
+    public boolean tokenExists(String token){
+        return usersSessions.findById(token).isPresent();
     }
 }

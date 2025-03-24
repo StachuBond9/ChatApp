@@ -2,8 +2,10 @@ package com.staislawwojcik.forum.api;
 
 import com.staislawwojcik.forum.api.request.UserRequest;
 import com.staislawwojcik.forum.api.response.ErrorResponse;
-import com.staislawwojcik.forum.infrastructure.database.User;
+import com.staislawwojcik.forum.infrastructure.database.user.User;
+import com.staislawwojcik.forum.infrastructure.database.user.UserRepository;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
@@ -11,13 +13,21 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
 public class UserControllerIntegrationTest {
+
+    @Autowired
+    private UserRepository userRepository;
+
     @Autowired
     private WebTestClient webTestClient;
+
+
+    @BeforeEach
+    void setUp() {
+        userRepository.deleteAll();
+    }
 
     @Test
     void addUserToDatabase() {
@@ -154,4 +164,6 @@ public class UserControllerIntegrationTest {
                 });
 
     }
+
+
 }

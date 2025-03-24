@@ -1,19 +1,23 @@
-package com.staislawwojcik.forum.infrastructure.database;
+package com.staislawwojcik.forum.infrastructure.database.pm;
 
+import com.staislawwojcik.forum.infrastructure.database.user.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 @Entity
 public class PrivateMessage {
     @Id
     private String id;
-
+    @ManyToOne
     private User receiver;
+    @ManyToOne
     private User sender;
+
     private String message;
     private LocalDateTime sendAt;
 
@@ -63,7 +67,7 @@ public class PrivateMessage {
     }
 
     public LocalDateTime getSendAt() {
-        return sendAt;
+        return sendAt.truncatedTo(ChronoUnit.MILLIS).withNano((sendAt.getNano()/10_000_000)*10_000_000);
     }
 
     public void setSendAt(LocalDateTime sendAt) {

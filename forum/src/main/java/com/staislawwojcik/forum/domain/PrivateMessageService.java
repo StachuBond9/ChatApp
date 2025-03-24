@@ -1,10 +1,13 @@
 package com.staislawwojcik.forum.domain;
 
-import com.staislawwojcik.forum.infrastructure.database.*;
+import com.staislawwojcik.forum.infrastructure.database.pm.PrivateMessage;
+import com.staislawwojcik.forum.infrastructure.database.pm.PrivateMessageRepository;
+import com.staislawwojcik.forum.infrastructure.database.user.User;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,7 +27,8 @@ public class PrivateMessageService {
         User receiver = users.getById(receiverId);
         User sender = users.getByToken(senderToken);
 
-        return new PrivateMessage(UUID.randomUUID().toString(), receiver, sender, message, LocalDateTime.now());
+        PrivateMessage pm = new PrivateMessage(UUID.randomUUID().toString(), receiver, sender, message, LocalDateTime.now());
+        return privateMessageRepository.save(pm);
     }
 
     public List<PrivateMessage> getMessagesFromConversation(String receiverID, String ownerToken) {
@@ -38,6 +42,7 @@ public class PrivateMessageService {
                 .filter(privateMessage -> privateMessage.getReceiver().equals(sender) && privateMessage.getSender().equals(receiver)).toList();
 
         messagesFromSender.addAll(messagesFromReceiver);
+        messagesFromSender.sort(Comparator.comparing(PrivateMessage::getSendAt));
         return messagesFromSender;
     }
 
@@ -46,6 +51,5 @@ public class PrivateMessageService {
         List<User> userList =  users.usersList();
         userList.remove(owner);
         return userList;
-
     }
 }

@@ -1,4 +1,4 @@
-package com.staislawwojcik.forum.infrastructure.database;
+package com.staislawwojcik.forum.infrastructure.database.pm;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
