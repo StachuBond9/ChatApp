@@ -3,63 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Layout</title>
+    <title>Chat Application</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Nagłówek -->
     <header>
         <h1>Chat Application</h1>
     </header>
-
-    <!-- Główna zawartość -->
     <div id="container">
-        <!-- Lista czatów -->
+        <button onclick="logout()">Logout</button>
+        <!-- Lista pokoi czatowych -->
         <div id="groupList">
             <h4>Group List</h4>
-            <ul>
-                <li>Chat1</li>
-                <li>Chat2</li>
-                <li>Chat3</li>
-            </ul>
-        </div>
-
-        <!-- Sekcja czatu grupowego -->
-        <div id="groupChat" class="chatSection">
-            <h3>Group Chat (Chat name)</h3>
-            <div id="incomingMsg">
-                
-            </div>
-            <div id="outgoingMsg">
-
-            </div>
-            <div>
-                <textarea id="groupChatTextArea" placeholder="Type message"></textarea>
-                <input type="button" value="Send">
-            </div>
+            <ul id="chatRooms"></ul>
+            <input type="text" id="newRoomName" placeholder="New room name">
+            <button onclick="createChatRoom()">Create Room</button>
         </div>
         
-        <!-- Lista czatów -->
-        <div id="groupList">
-            <h4>User list</h4>
-            <ul>
-                <li>User1</li>
-                <li>User2</li>
-                <li>User3</li>
-            </ul>
+        <!-- Sekcja czatu grupowego -->
+        <div id="groupChat" class="chatSection">
+            <h3 id="currentRoom">Group Chat</h3>
+            <div id="groupMessages"></div>
+            <textarea id="groupChatTextArea" placeholder="Type message"></textarea>
+            <button onclick="sendGroupMessage()">Send</button>
         </div>
+        
+        <!-- Lista użytkowników -->
+        <div id="userList">
+            <h4>User List</h4>
+            <ul id="users"></ul>
+        </div>
+        
         <!-- Sekcja czatu prywatnego -->
         <div id="pvChat" class="chatSection">
-            <h3>Private Chat (User name) </h3>
-            <div id="incomingMsg">
-                
-            </div>
-            <div id="outgoingMsg">
-
-            </div>
+            <h3 id="currentUser">Private Chat</h3>
+            <div id="privateMessages"></div>
             <textarea id="pvChatTextArea" placeholder="Type message"></textarea>
-            <input type="button" value="Send">
+            <button onclick="sendPrivateMessage()">Send</button>
         </div>
     </div>
+    
+    <script>
+        const API_URL = "http://localhost:8080";
+        const token = localStorage.getItem("authToken");
+    
+        if (!token) {
+            alert("Brak tokena! Zaloguj się ponownie.");
+            window.location.href = "welcomePage.html";
+        }
+    
+    
+        async function logout() {
+                localStorage.clear();
+                window.location.href ="welcomePage.html";
+            }
+    
+        async function createChatRoom() {
+            const roomName = document.getElementById("newRoomName").value;
+            const response = await fetch(`${API_URL}/chat-room/createRoom/${roomName}`, {
+                method: "POST",
+                headers: { 
+                    "Authorization": token, 
+                    "token": token
+                }
+            });
+            if (response.ok) {
+                alert("Room created!");
+                loadChatRooms();
+            } else {
+                alert("Błąd tworzenia pokoju.");
+            }
+        }
+    
+        async function sendGroupMessage() {
+            const message = document.getElementById("groupChatTextArea").value;
+            const roomId = document.getElementById("currentRoom").dataset.roomId;
+            await fetch(`${API_URL}/chat-room/${roomId}/send-message`, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": token, 
+                    "token": token
+                },
+                body: JSON.stringify(message)
+            });
+            loadGroupMessages(roomId); // Odśwież wiadomości po wysłaniu
+        }
+    
+        async function sendPrivateMessage() {
+            const message = document.getElementById("pvChatTextArea").value;
+            const userId = document.getElementById("currentUser").dataset.userId;
+            await fetch(`${API_URL}/pm/${userId}`, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json", 
+                    "Authorization": token, 
+                    "token": token
+                },
+                body: JSON.stringify({ message })
+            });
+            loadPrivateMessages(userId); // Odśwież wiadomości po wysłaniu
+        }
+    
+        async function loadChatRooms() {
+            const response = await fetch(`${API_URL}/chat-room/get-rooms`, {
+                headers: { "Authorization": token, "token": token }
+            });
+            const rooms = await response.json();
+            document.getElementById("chatRooms").innerHTML = rooms
+                .map(room => `<li onclick="joinRoom('${room.id}', '${room.name}')">${room.name}</li>`)
+                .join("");
+        }
+    
+        async function loadUsers() {
+            const response = await fetch(`${API_URL}/pm/users`, {
+                headers: { "Authorization": token, "token": token }
+            });
+            const users = await response.json();
+            document.getElementById("users").innerHTML = users
+                .map(user => `<li onclick="startPrivateChat('${user.login}')">${user.login}</li>`)
+                .join("");
+        }
+    
+        async function loadGroupMessages(roomId) {
+            const response = await fetch(`${API_URL}/chat-room/${roomId}/getMessages`, {
+                headers: { "Authorization": token, "token": token }
+            });
+            const messages = await response.json();
+            document.getElementById("groupMessages").innerHTML = messages
+                .map(msg => `<p><strong>${msg.sender.login}:</strong> ${msg.message}</p>`)
+                .join("");
+        }
+    
+        async function loadPrivateMessages(userId) {
+            const response = await fetch(`${API_URL}/pm/conversation/${userId}`, {
+                headers: { "Authorization": token, "token": token }
+            });
+            const messages = await response.json();
+            document.getElementById("privateMessages").innerHTML = messages
+                .map(msg => `<p><strong>${msg.sender.login}:</strong> ${msg.message}</p>`)
+                .join("");
+        }
+    
+        function joinRoom(id, name) {
+            document.getElementById("currentRoom").innerText = `Group Chat: ${name}`;
+            document.getElementById("currentRoom").dataset.roomId = id;
+            loadGroupMessages(id);
+            setInterval(() => loadGroupMessages(id), 5000); // Odświeżaj co 5 sek.
+        }
+    
+        function startPrivateChat(userId) {
+            document.getElementById("currentUser").innerText = `Private Chat: ${userId}`;
+            document.getElementById("currentUser").dataset.userId = userId;
+            loadPrivateMessages(userId);
+            setInterval(() => loadPrivateMessages(userId), 5000); // Odświeżaj co 5 sek.
+        }
+    
+        window.onload = () => {
+            loadChatRooms();
+            loadUsers();
+        };
+    </script>
+    
+
 </body>
 </html>

@@ -9,6 +9,7 @@
     - użytkownik widzi wszytskkie pokoje i do nich należy
     - nie ma możliwosci edytwoania pokoju
     - użytkownik może stworzyć wiele pokoji
+   
 3. Czat prywatny
     - każdy ma czat prywatny z innymi użytkownikami
     - każdy użytkownik widzi pozostałych uzytkowników

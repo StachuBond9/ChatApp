@@ -2,11 +2,9 @@ package com.staislawwojcik.forum.api;
 
 import com.staislawwojcik.forum.api.request.PMRequest;
 import com.staislawwojcik.forum.domain.PrivateMessageService;
-import com.staislawwojcik.forum.infrastructure.database.PrivateMessage;
-import com.staislawwojcik.forum.infrastructure.database.User;
-import io.swagger.v3.oas.annotations.headers.Header;
+import com.staislawwojcik.forum.infrastructure.database.pm.PrivateMessage;
+import com.staislawwojcik.forum.infrastructure.database.user.User;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,8 +27,8 @@ public class PrivateMessageController {
     }
 
     @GetMapping(value ="/conversation/{receiverId}" )
-    ResponseEntity<List<PrivateMessage>> getMessagesFromConversation(@PathVariable String receiverID, @RequestHeader("token") String ownerToken ){
-        List<PrivateMessage> pms = privateMessageService.getMessagesFromConversation(receiverID, ownerToken);
+    ResponseEntity<List<PrivateMessage>> getMessagesFromConversation(@PathVariable String receiverId, @RequestHeader("token") String ownerToken ){
+        List<PrivateMessage> pms = privateMessageService.getMessagesFromConversation(receiverId, ownerToken);
         return ResponseEntity.status(HttpStatus.OK).body(pms);
     }
     @GetMapping(value = "/users")

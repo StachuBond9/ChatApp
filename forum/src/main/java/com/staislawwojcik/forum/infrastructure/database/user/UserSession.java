@@ -1,8 +1,6 @@
-package com.staislawwojcik.forum.infrastructure.database;
+package com.staislawwojcik.forum.infrastructure.database.user;
 
 import jakarta.persistence.*;
-
-import java.util.UUID;
 
 
 @Table(name = "user-session")
@@ -11,6 +9,7 @@ public class UserSession {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String token;
+
     @ManyToOne
     private User loggedUser;
 

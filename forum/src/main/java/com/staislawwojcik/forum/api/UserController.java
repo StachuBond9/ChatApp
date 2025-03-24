@@ -2,7 +2,7 @@ package com.staislawwojcik.forum.api;
 
 import com.staislawwojcik.forum.api.request.UserRequest;
 import com.staislawwojcik.forum.domain.UserService;
-import com.staislawwojcik.forum.infrastructure.database.User;
+import com.staislawwojcik.forum.infrastructure.database.user.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

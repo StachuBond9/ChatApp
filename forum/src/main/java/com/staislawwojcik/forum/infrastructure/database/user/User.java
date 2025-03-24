@@ -1,4 +1,4 @@
-package com.staislawwojcik.forum.infrastructure.database;
+package com.staislawwojcik.forum.infrastructure.database.user;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
