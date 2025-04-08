@@ -5,6 +5,8 @@ import com.staislawwojcik.forum.domain.UserService;
 import com.staislawwojcik.forum.infrastructure.database.user.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -12,9 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(value = "/user")
 public class UserController {
     private final UserService userService;
+    private final AuthenticationManager authenticationManager;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AuthenticationManager authenticationManager) {
         this.userService = userService;
+        this.authenticationManager = authenticationManager;
     }
 
     @PostMapping(value = "/registration")
@@ -25,6 +29,7 @@ public class UserController {
 
     @PostMapping(value = "/login")
     public ResponseEntity<String> userLogin(@RequestBody UserRequest userRequest) {
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userRequest.login(), userRequest.password()));
         String token = userService.loginUser(userRequest.login(), userRequest.password());
         return ResponseEntity.status(HttpStatus.OK).body(token);
     }

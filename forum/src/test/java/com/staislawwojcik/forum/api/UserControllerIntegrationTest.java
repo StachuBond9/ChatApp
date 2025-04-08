@@ -4,6 +4,9 @@ import com.staislawwojcik.forum.api.request.UserRequest;
 import com.staislawwojcik.forum.api.response.ErrorResponse;
 import com.staislawwojcik.forum.infrastructure.database.user.User;
 import com.staislawwojcik.forum.infrastructure.database.user.UserRepository;
+import com.staislawwojcik.forum.infrastructure.database.user.UserSession;
+import com.staislawwojcik.forum.infrastructure.database.user.UserSessionRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -21,11 +25,24 @@ public class UserControllerIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private UserSessionRepository userSessionRepository;
+
+    @Autowired
     private WebTestClient webTestClient;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
 
     @BeforeEach
     void setUp() {
+        userSessionRepository.deleteAll();
+        userRepository.deleteAll();
+    }
+
+    @AfterEach
+    void tearDown() {
+        userSessionRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -42,7 +59,7 @@ public class UserControllerIntegrationTest {
                 .expectBody(User.class)
                 .value(user -> {
                     Assertions.assertEquals(login, user.getLogin());
-                    Assertions.assertEquals(password, user.getPassword());
+                    Assertions.assertTrue(passwordEncoder.matches(password, user.getPassword()));
                 });
     }
 
@@ -130,7 +147,7 @@ public class UserControllerIntegrationTest {
                 .expectBody(User.class)
                 .value(user -> {
                     Assertions.assertEquals(login, user.getLogin());
-                    Assertions.assertEquals(password, user.getPassword());
+                    Assertions.assertTrue(passwordEncoder.matches(password, user.getPassword()));
                 });
 
         //when then
@@ -156,12 +173,7 @@ public class UserControllerIntegrationTest {
                 .uri("/user/login")
                 .bodyValue(new UserRequest(login, password))
                 .exchange()
-                .expectStatus().isUnauthorized()
-                .expectBody(ErrorResponse.class)
-                .value(errorResponse -> {
-                    Assertions.assertEquals("Invalid login credientals", errorResponse.message());
-                    Assertions.assertEquals(HttpStatus.UNAUTHORIZED.value(), errorResponse.status());
-                });
+                .expectStatus().isForbidden();
 
     }
 

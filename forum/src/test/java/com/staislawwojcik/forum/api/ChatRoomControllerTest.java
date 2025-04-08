@@ -4,13 +4,20 @@ import com.staislawwojcik.forum.api.request.UserRequest;
 import com.staislawwojcik.forum.domain.UserService;
 import com.staislawwojcik.forum.infrastructure.database.chatroom.ChatRoom;
 import com.staislawwojcik.forum.infrastructure.database.chatroom.ChatRoomMessage;
+import com.staislawwojcik.forum.infrastructure.database.chatroom.ChatRoomRepository;
 import com.staislawwojcik.forum.infrastructure.database.user.User;
+import com.staislawwojcik.forum.infrastructure.database.user.UserRepository;
+import com.staislawwojcik.forum.infrastructure.database.user.UserSessionRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.util.List;
@@ -25,7 +32,31 @@ class ChatRoomControllerTest {
     private WebTestClient webTestClient;
     @Autowired
     private UserService userService;
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private UserSessionRepository userSessionRepository;
+
+    @Autowired
+    private ChatRoomRepository chatRoomRepository;
+    @BeforeEach
+    void setUp() {
+        chatRoomRepository.deleteAll();
+        userSessionRepository.deleteAll();
+        userRepository.deleteAll();
+    }
+
+    @AfterEach
+    void tearDown() {
+        chatRoomRepository.deleteAll();
+        userSessionRepository.deleteAll();
+        userRepository.deleteAll();
+    }
 
 
     @Test
@@ -98,7 +129,8 @@ class ChatRoomControllerTest {
     }
 
     private User createUser(String login, String password) {
-        return webTestClient.post()
+
+         webTestClient.post()
                 .uri("/user/registration")
                 .bodyValue(new UserRequest(login, password))
                 .exchange()
@@ -106,13 +138,13 @@ class ChatRoomControllerTest {
                 .expectBody(User.class)
                 .value(user -> {
                     Assertions.assertEquals(login, user.getLogin());
-                    Assertions.assertEquals(password, user.getPassword());
-                })
-                .returnResult()
-                .getResponseBody();
+                    Assertions.assertTrue(passwordEncoder.matches(password, user.getPassword()));
+                });
+         return new User(login, password);
     }
 
     private String login(User user) {
+        System.out.println(user);
         return webTestClient.post()
                 .uri("/user/login")
                 .bodyValue(new UserRequest(user.getLogin(), user.getPassword()))
