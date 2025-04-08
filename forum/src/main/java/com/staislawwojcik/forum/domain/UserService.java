@@ -6,6 +6,7 @@ import com.staislawwojcik.forum.infrastructure.database.user.UserSession;
 import com.staislawwojcik.forum.infrastructure.database.user.UserSessionRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,10 +17,12 @@ public class UserService {
 
     private final UserRepository users;
     private final UserSessionRepository usersSessions;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository users, UserSessionRepository usersSessions) {
+    public UserService(UserRepository users, UserSessionRepository usersSessions, PasswordEncoder passwordEncoder) {
         this.users = users;
         this.usersSessions = usersSessions;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User createUser(String login, String password) {
@@ -29,14 +32,15 @@ public class UserService {
         if (!passwordValidation(password)) {
             throw new DomainException("Invalid password( " + password + " )", HttpStatus.BAD_REQUEST.value());
         }
-        User user = new User(login, password);
+        User user = new User(login, passwordEncoder.encode(password));
         return users.save(user);
     }
 
     public String loginUser(String login, String password) {
-        User user = users.findByLoginAndPassword(login, password)
-                .orElseThrow(() -> new DomainException("Invalid login credientals", HttpStatus.UNAUTHORIZED.value()));
-
+        //User user = users.findByLoginAndPassword(login, passwordEncoder.encode(password))
+        //        .orElseThrow());
+        User user =  users.findById(login)
+                .orElseThrow(() -> new DomainException("Invalid login credentials", HttpStatus.UNAUTHORIZED.value()));
         return usersSessions.save(new UserSession(user)).getToken();
 
     }

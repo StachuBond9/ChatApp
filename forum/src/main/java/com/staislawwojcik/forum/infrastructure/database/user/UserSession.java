@@ -10,6 +10,8 @@ public class UserSession {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String token;
 
+
+
     @ManyToOne
     private User loggedUser;
 
@@ -35,5 +37,13 @@ public class UserSession {
 
     public void setLoggedUser(User loggedUser) {
         this.loggedUser = loggedUser;
+    }
+
+    @Override
+    public String toString() {
+        return "UserSession{" +
+                "token='" + token + '\'' +
+                ", loggedUser=" + loggedUser +
+                '}';
     }
 }

@@ -21,4 +21,3 @@
    - TOKEN musimy zapisac w bazie dnaych wraz z informacji do kogo nalezy token
    - podczas wylogowania sie usuwamy rekord z tokenem z bazy danych
    - token powinnien miec date ważnosci np 7 dni
-   - 

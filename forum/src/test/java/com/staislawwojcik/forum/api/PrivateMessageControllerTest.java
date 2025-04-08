@@ -4,13 +4,19 @@ import com.staislawwojcik.forum.api.request.PMRequest;
 import com.staislawwojcik.forum.api.request.UserRequest;
 import com.staislawwojcik.forum.domain.UserService;
 import com.staislawwojcik.forum.infrastructure.database.pm.PrivateMessage;
+import com.staislawwojcik.forum.infrastructure.database.pm.PrivateMessageRepository;
 import com.staislawwojcik.forum.infrastructure.database.user.User;
+import com.staislawwojcik.forum.infrastructure.database.user.UserRepository;
+import com.staislawwojcik.forum.infrastructure.database.user.UserSessionRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.time.LocalDateTime;
@@ -24,6 +30,30 @@ class PrivateMessageControllerTest {
     private WebTestClient webTestClient;
     @Autowired
     private UserService userService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private UserSessionRepository userSessionRepository;
+
+    @Autowired
+    private PrivateMessageRepository privateMessageRepository;
+
+    @BeforeEach
+    void setUp() {
+        privateMessageRepository.deleteAll();
+        userSessionRepository.deleteAll();
+        userRepository.deleteAll();
+    }
+
+    @AfterEach
+    void tearDown() {
+        privateMessageRepository.deleteAll();
+        userSessionRepository.deleteAll();
+        userRepository.deleteAll();
+    }
 
     @Test
     void getMessagesFromConversationsTest() {
@@ -69,7 +99,7 @@ class PrivateMessageControllerTest {
     }
 
     private User createUser(String login, String password) {
-        return webTestClient.post()
+        webTestClient.post()
                 .uri("/user/registration")
                 .bodyValue(new UserRequest(login, password))
                 .exchange()
@@ -77,10 +107,9 @@ class PrivateMessageControllerTest {
                 .expectBody(User.class)
                 .value(user -> {
                     Assertions.assertEquals(login, user.getLogin());
-                    Assertions.assertEquals(password, user.getPassword());
-                })
-                .returnResult()
-                .getResponseBody();
+                    Assertions.assertTrue(passwordEncoder.matches(password, user.getPassword()));
+                });
+        return new User(login,password);
     }
 
     private PrivateMessage createPM(String senderToken, String receiverId, String message) {
